@@ -202,7 +202,14 @@ function getPokemonEvolution($evolutionUrl){
         <div class="row text-center pokePageData">
             <div class="col-md-4 pokemonDetails">
                 <div class="imagePoke border">
-                    <img src="./pokeball.png" id="pokeImage" alt="pokemon Image"/>
+                    <?php                        
+                        if(!empty($pokemonImage)) { 
+                            echo '<img src="'.$pokemonImage.'" id="pokeImage" alt="pokemon Image" width="200px"/>';
+                        } else { 
+                            echo '<img src="./pokeball.png" id="pokeImage" alt="pokemon Image" width="200px"/>';
+                        } 
+                    ?>
+                    
                 </div>
             </div>
             <div class="col-md-4 text-start p-3">
