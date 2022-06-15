@@ -1,10 +1,10 @@
 <?php
  if (isset($_POST['submit'])){
-   echo $_POST['pokemonName'];
+  // echo $_POST['pokemonName'];
    
    $api_url = 'http://pokeapi.co/api/v2/pokemon/'.$_POST['pokemonName'];
 
-   echo " URL = ".$api_url;
+   //echo " URL = ".$api_url;
 
    $pokeApiResponse = getPokemonData($api_url);
 
@@ -17,16 +17,17 @@
    $pokemonAbilities =getAbilities($pokeApiResponse->abilities);
    $pokemonMoves = getMoves($pokeApiResponse->moves);
    $pokemonTypes = getTypes($pokeApiResponse->types);
-   $pokemonEvolutionUrl  = getEvolutionUrl($pokeApiResponse->species->url); // only to fetch evolution url of pokemon using species url  
+   $pokemonEvolution  = getEvolutionUrl($pokeApiResponse->species->url); // only to fetch evolution url of pokemon using species url  
 
-   echo "\n Name = ".$pokemonName;
-   echo "\n pokemon Image = ".$pokemonImage;
-   echo "\n pokemon Weight = ".$pokemonWeight;
-   echo "\n pokemon Height = ".$pokemonHeight;
-   echo "\n pokemon Abilities = ".$pokemonAbilities;
-   echo "\n pokemon Moves = ".$pokemonMoves;
-   echo "\n pokemon Types = ".$pokemonTypes;
-   echo "\n pokemon Evolution = ".$pokemonEvolution;
+//    echo "\n Name = ".$pokemonName;
+//    echo "\n pokemon Image = ".$pokemonImage;
+//    echo "\n pokemon Weight = ".$pokemonWeight;
+//    echo "\n pokemon Height = ".$pokemonHeight;
+//    echo "\n pokemon Abilities = ".$pokemonAbilities;
+//    echo "\n pokemon Moves = ".$pokemonMoves;
+//    echo "\n pokemon Types = ".$pokemonTypes;
+//    echo "\n pokemon Evolution = ";
+   //print_r($pokemonEvolution);
    //var_dump($pokemonAbilities);
     // $error = error_get_last();
     // var_dump($error);
@@ -95,7 +96,10 @@ function getEvolutionUrl($speciesUrl){
     $pokeSpeciesUrl = file_get_contents($speciesUrl);
     $speciesUrlData = json_decode($pokeSpeciesUrl);
       /** from json of species url we get evolution url send it to another function */
-    getPokemonEvolution($speciesUrlData->evolution_chain->url);
+
+    //echo "Url = ".$speciesUrlData->evolution_chain->url;
+    //return $speciesUrlData; 
+      getPokemonEvolution($speciesUrlData->evolution_chain->url);
 }
 
 
@@ -106,8 +110,8 @@ function getEvolutionUrl($speciesUrl){
     */
 
 function getPokemonEvolution($evolutionUrl){
-    $pokeEvolution = file_get_contents(evolutionUrl);
-    $pokeEvolutionDetails = json_decode(pokeEvolution);
+    $pokeEvolution = file_get_contents($evolutionUrl);
+    $pokeEvolutionDetails = json_decode($pokeEvolution);
         
         $pokeEvolutionArr = $pokeEvolutionDetails->chain->evolves_to;
         $length1stPokeEvolvesToLength = count($pokeEvolutionDetails->chain->evolves_to);
@@ -115,28 +119,45 @@ function getPokemonEvolution($evolutionUrl){
         if($length1stPokeEvolvesToLength) { // if a base pokemon has atleast one evolution
             
             //get pokemon Name, img and type and send it to display evolution data.
-            $pokeUrl = 'http://pokeapi.co/api/v2/pokemon/'.$pokeEvolutionDetails->chain->species->name;
+            $url =  'http://pokeapi.co/api/v2/pokemon/';
+            $pokeUrl =$url.$pokeEvolutionDetails->chain->species->name;
             $getBasePokeData = getPokemonData($pokeUrl);
+            echo "inside getPokemonEvolution";
+           $evolutionArr = pushEvolutionData($getBasePokeData,$evolutionArr); //first time 
 
-           /* $evolutionArr = pushEvolutionData(getBasePokeData,evolutionArr); //first time 
-
-            for(let i=0;i<pokeEvolutionArr.length;i++){ //for getting first level evolution
-                let eve1 = await getPokemonData(`${url+pokeEvolutionArr[i].species.name}`);
-                evolutionArr = pushEvolutionData(eve1,evolutionArr);
-                for(j=0;j<pokeEvolutionArr[i].evolves_to.length;j++){ // get if the first level has another evolution
-                    let eve2 = await getPokemonData(`${url+pokeEvolutionArr[i].evolves_to[j].species.name}`);
-                    evolutionArr = pushEvolutionData(eve2,evolutionArr);
+            for($i=0;$i<count($pokeEvolutionArr);$i++){ //for getting first level evolution
+                $eve1 = getPokemonData($url.$pokeEvolutionArr[$i]->species->name);
+                $evolutionArr = pushEvolutionData($eve1,$evolutionArr);
+                for($j=0; $j<count($pokeEvolutionArr[$i]->evolves_to) ; $j++){ // get if the first level has another evolution
+                    $eve2 = getPokemonData($url.$pokeEvolutionArr[$i]->evolves_to[$j]->species->name);
+                    $evolutionArr = pushEvolutionData($eve2,$evolutionArr);
                 }
             }
-            */
+             /**/
             //displayEvolutionPokemon(evolutionArr);
-
+                return $evolutionArr;
          }else{ // if pokemon has no evolution
-            ErrorMessage("This pokemon has no evolution");
+            echo "This pokemon has no evolution";
          }
 
 }
 
+/**
+     * Add evolution display data of each pokemon to the array
+     * At first call the array is empty 
+     * 
+     */
+    function pushEvolutionData($jsonobj ,$arr){
+        //print_r($jsonobj);
+        /*if(!empty($jsonobj)){
+            $newdata =  array('name' => $jsonobj->name,'url' => $jsonobj->sprites->other->home->front_default,'types' => getTypes($jsonobj->types));
+       
+          array_merge($arr,$newdata);
+
+          print_r($arr);
+        }*/
+        //return $arr;
+    }
 
 ?>
 <!DOCTYPE html>
@@ -191,27 +212,39 @@ function getPokemonEvolution($evolutionUrl){
                     </div>
                     <div class="poke-name">
                         <label class="p-2"> Name :</label>
-                        <span id="pokeName">Pokemon</span>
+                        <span id="pokeName">
+                        <?php if(!empty($pokemonName)) { echo $pokemonName; }else{ echo "Pokemon";} ?>
+                        </span>
                     </div>
                     <div class="poke-height">
                         <label class="p-2"> Height :</label>
-                        <span id="pokeHeight">5</span>
+                        <span id="pokeHeight">
+                        <?php if(!empty($pokemonHeight)) { echo $pokemonHeight; }else{ echo "5";} ?>
+                        </span>
                     </div>
                     <div class="poke-weight">
                         <label class="p-2"> Weight :</label>
-                        <span id="pokeWeight">50</span>
+                        <span id="pokeWeight">
+                        <?php if(!empty($pokemonWeight)) { echo $pokemonWeight; }else{ echo "50";} ?>
+                        </span>
                     </div>
                     <div class="poke-abilities">
                         <label class="p-2">  Abilities :</label>
-                        <span id="pokeAbilities">Pokemon</span>
+                        <span id="pokeAbilities">
+                        <?php if(!empty($pokemonAbilities)) { echo $pokemonAbilities; }else{ echo "Pokemon";} ?>
+                        </span>
                     </div>
                     <div class="poke-types">
                         <label class="p-2">  Types :</label>
-                        <span id="pokeTypes">Pokemon</span>
+                        <span id="pokeTypes">
+                        <?php if(!empty($pokemonTypes)) { echo $pokemonTypes; }else{ echo "Pokemon";} ?>
+                        </span>
                     </div>
                     <div class="poke-moves">
                         <label class="p-2">  Moves :</label>
-                        <span id="pokeMoves">Pokemon</span>
+                        <span id="pokeMoves">
+                        <?php if(!empty($pokemonMoves)) { echo $pokemonMoves; }else{ echo "Pokemon";} ?>
+                        </span>
                     </div>
 
                 </div>
