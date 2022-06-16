@@ -27,7 +27,7 @@
 //    echo "\n pokemon Moves = ".$pokemonMoves;
 //    echo "\n pokemon Types = ".$pokemonTypes;
 //    echo "\n pokemon Evolution = ";
-   print_r($pokemonEvolution);
+   //print_r($pokemonEvolution);
    //var_dump($pokemonAbilities);
     // $error = error_get_last();
     // var_dump($error);
@@ -137,7 +137,7 @@ function getPokemonEvolution($evolutionUrl){
                 return $evolutionArr;
                // print_r($evolutionArr);
          }else{ // if pokemon has no evolution
-            echo "This pokemon has no evolution";
+           echo "This pokemon has no evolution";
          }
 
 }
@@ -151,7 +151,7 @@ function getPokemonEvolution($evolutionUrl){
      */
     function pushEvolutionData($jsonobj ,$arr){
         if(!empty($jsonobj)){
-            $newdata =  array('name' => $jsonobj->name,'url' => $jsonobj->sprites->other->home->front_default, 'types'=>getTypes(jsonobj->types));
+            $newdata =  array('name' => $jsonobj->name,'url' => $jsonobj->sprites->other->home->front_default, 'types'=>getTypes($jsonobj->types));
             array_push($arr,$newdata);
         }
         return $arr;
@@ -193,7 +193,7 @@ function getPokemonEvolution($evolutionUrl){
                     </form>
                 </section>
                 <div class="actions mx-3 col py-3 my-3">
-                    <button type="button" id="research">Search New Pokemon</button>
+                    <button type="button" id="research"><a href="<?php $_SERVER['PHP_SELF']; ?>">Search New Pokemon</a></button>
                 </div>
             </main>
         </div>
@@ -257,14 +257,21 @@ function getPokemonEvolution($evolutionUrl){
         </div>
         <!----><section class="evolutionSection">
             <div class="row" id="rowHeader">
-                
+                <?php  if(!empty($pokemonEvolution)) { ?>
                     <h2>Evolutions</h2>
                 <?php
-                    /*foreach($pokemonEvolution as evoPokemon){
-                        echo "evopokemon Name";
-                    }*/
+                    forEach($pokemonEvolution as $evoPokemon) {
+                       /* echo "evopokemon Name = ".$evoPokemon['name'];
+                        echo "evopokemon image url =  ".$evoPokemon['url'];
+                        echo "evopokemon types = ".$evoPokemon['types'];*/
+                        echo "<div class=\"col-12 col-md-4 text-center\">";
+                        echo "<img src=".$evoPokemon['url']." style=\"width: 200px; border-radius: 50%; border: 1px solid black;\"\>";
+                        echo "<h4>".$evoPokemon['name']."</h4>";
+                        echo "<h5>".$evoPokemon['types']."</h5>";
+                        echo "</div>";
+                    }
                 ?>
-
+            <?php } ?>
             </div>
             <div class="row" id="showNoEvolutionPokeMsg">
                 
