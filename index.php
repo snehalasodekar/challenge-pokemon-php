@@ -27,7 +27,7 @@
 //    echo "\n pokemon Moves = ".$pokemonMoves;
 //    echo "\n pokemon Types = ".$pokemonTypes;
 //    echo "\n pokemon Evolution = ";
-   //print_r($pokemonEvolution);
+   print_r($pokemonEvolution);
    //var_dump($pokemonAbilities);
     // $error = error_get_last();
     // var_dump($error);
@@ -99,7 +99,8 @@ function getEvolutionUrl($speciesUrl){
 
     //echo "Url = ".$speciesUrlData->evolution_chain->url;
     //return $speciesUrlData; 
-      getPokemonEvolution($speciesUrlData->evolution_chain->url);
+     $PokemonEvoData =  getPokemonEvolution($speciesUrlData->evolution_chain->url);
+     return $PokemonEvoData;
 }
 
 
@@ -115,16 +116,14 @@ function getPokemonEvolution($evolutionUrl){
         
         $pokeEvolutionArr = $pokeEvolutionDetails->chain->evolves_to;
         $length1stPokeEvolvesToLength = count($pokeEvolutionDetails->chain->evolves_to);
-        $evolutionArr = array();
+        $evolutionArr = [];
         if($length1stPokeEvolvesToLength) { // if a base pokemon has atleast one evolution
             
             //get pokemon Name, img and type and send it to display evolution data.
             $url =  'http://pokeapi.co/api/v2/pokemon/';
             $pokeUrl =$url.$pokeEvolutionDetails->chain->species->name;
             $getBasePokeData = getPokemonData($pokeUrl);
-            echo "inside getPokemonEvolution";
-           $evolutionArr = pushEvolutionData($getBasePokeData,$evolutionArr); //first time 
-
+            $evolutionArr = pushEvolutionData($getBasePokeData,$evolutionArr); //first time 
             for($i=0;$i<count($pokeEvolutionArr);$i++){ //for getting first level evolution
                 $eve1 = getPokemonData($url.$pokeEvolutionArr[$i]->species->name);
                 $evolutionArr = pushEvolutionData($eve1,$evolutionArr);
@@ -136,27 +135,26 @@ function getPokemonEvolution($evolutionUrl){
              /**/
             //displayEvolutionPokemon(evolutionArr);
                 return $evolutionArr;
+               // print_r($evolutionArr);
          }else{ // if pokemon has no evolution
             echo "This pokemon has no evolution";
          }
 
 }
-
+/**
+ * 
+*/
 /**
      * Add evolution display data of each pokemon to the array
      * At first call the array is empty 
      * 
      */
     function pushEvolutionData($jsonobj ,$arr){
-        //print_r($jsonobj);
-        /*if(!empty($jsonobj)){
-            $newdata =  array('name' => $jsonobj->name,'url' => $jsonobj->sprites->other->home->front_default,'types' => getTypes($jsonobj->types));
-       
-          array_merge($arr,$newdata);
-
-          print_r($arr);
-        }*/
-        //return $arr;
+        if(!empty($jsonobj)){
+            $newdata =  array('name' => $jsonobj->name,'url' => $jsonobj->sprites->other->home->front_default, 'types'=>getTypes(jsonobj->types));
+            array_push($arr,$newdata);
+        }
+        return $arr;
     }
 
 ?>
@@ -261,6 +259,11 @@ function getPokemonEvolution($evolutionUrl){
             <div class="row" id="rowHeader">
                 
                     <h2>Evolutions</h2>
+                <?php
+                    /*foreach($pokemonEvolution as evoPokemon){
+                        echo "evopokemon Name";
+                    }*/
+                ?>
 
             </div>
             <div class="row" id="showNoEvolutionPokeMsg">
