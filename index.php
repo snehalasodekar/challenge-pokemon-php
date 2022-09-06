@@ -7,31 +7,21 @@
    //echo " URL = ".$api_url;
 
    $pokeApiResponse = getPokemonData($api_url);
+    if($pokeApiResponse){
 
-
-   $pokemonName = $pokeApiResponse->name;
-   $pokemonImage = $pokeApiResponse->sprites->other->home->front_default;
-   $pokemonWeight = $pokeApiResponse->weight;
-   $pokemonHeight = $pokeApiResponse->height;
-   
-   $pokemonAbilities =getAbilities($pokeApiResponse->abilities);
-   $pokemonMoves = getMoves($pokeApiResponse->moves);
-   $pokemonTypes = getTypes($pokeApiResponse->types);
-   $pokemonEvolution  = getEvolutionUrl($pokeApiResponse->species->url); // only to fetch evolution url of pokemon using species url  
-
-//    echo "\n Name = ".$pokemonName;
-//    echo "\n pokemon Image = ".$pokemonImage;
-//    echo "\n pokemon Weight = ".$pokemonWeight;
-//    echo "\n pokemon Height = ".$pokemonHeight;
-//    echo "\n pokemon Abilities = ".$pokemonAbilities;
-//    echo "\n pokemon Moves = ".$pokemonMoves;
-//    echo "\n pokemon Types = ".$pokemonTypes;
-//    echo "\n pokemon Evolution = ";
-   //print_r($pokemonEvolution);
-   //var_dump($pokemonAbilities);
-    // $error = error_get_last();
-    // var_dump($error);
-
+        $pokemonName = $pokeApiResponse->name;
+        $pokemonImage = $pokeApiResponse->sprites->other->home->front_default;
+        $pokemonWeight = $pokeApiResponse->weight;
+        $pokemonHeight = $pokeApiResponse->height;
+        
+        $pokemonAbilities =getAbilities($pokeApiResponse->abilities);
+        $pokemonMoves = getMoves($pokeApiResponse->moves);
+        $pokemonTypes = getTypes($pokeApiResponse->types);
+        $pokemonEvolution  = getEvolutionUrl($pokeApiResponse->species->url); // only to fetch evolution url of pokemon using species url  
+    }
+    else {
+        $falsePokename = "Please try again for another pokemon";
+    }
   }
 
 /***
@@ -39,10 +29,12 @@
  */
 function getPokemonData($pokeUrl){
     $json_data = file_get_contents($pokeUrl);
+    if(!empty($json_data)){
+        $pokeApiResponse = json_decode($json_data);
+        return $pokeApiResponse;
+    }
     // Decode JSON data into PHP array
-  $pokeApiResponse = json_decode($json_data);
-
-  return $pokeApiResponse;
+    return false;
 }
 
     /** 
@@ -97,7 +89,6 @@ function getEvolutionUrl($speciesUrl){
     $speciesUrlData = json_decode($pokeSpeciesUrl);
       /** from json of species url we get evolution url send it to another function */
 
-    //echo "Url = ".$speciesUrlData->evolution_chain->url;
     //return $speciesUrlData; 
      $PokemonEvoData =  getPokemonEvolution($speciesUrlData->evolution_chain->url);
      return $PokemonEvoData;
@@ -123,13 +114,13 @@ function getPokemonEvolution($evolutionUrl){
             $url =  'http://pokeapi.co/api/v2/pokemon/';
             $pokeUrl =$url.$pokeEvolutionDetails->chain->species->name;
             $getBasePokeData = getPokemonData($pokeUrl);
-            $evolutionArr = pushEvolutionData($getBasePokeData,$evolutionArr); //first time 
+            $evolutionArr = pushPokemonData($getBasePokeData,$evolutionArr); //first time 
             for($i=0;$i<count($pokeEvolutionArr);$i++){ //for getting first level evolution
-                $eve1 = getPokemonData($url.$pokeEvolutionArr[$i]->species->name);
-                $evolutionArr = pushEvolutionData($eve1,$evolutionArr);
+                $firstPokemonDataInEvolution = getPokemonData($url.$pokeEvolutionArr[$i]->species->name);
+                $evolutionArr = pushPokemonData($firstPokemonDataInEvolution,$evolutionArr);
                 for($j=0; $j<count($pokeEvolutionArr[$i]->evolves_to) ; $j++){ // get if the first level has another evolution
-                    $eve2 = getPokemonData($url.$pokeEvolutionArr[$i]->evolves_to[$j]->species->name);
-                    $evolutionArr = pushEvolutionData($eve2,$evolutionArr);
+                    $evolutionPokemonData = getPokemonData($url.$pokeEvolutionArr[$i]->evolves_to[$j]->species->name);
+                    $evolutionArr = pushPokemonData($evolutionPokemonData,$evolutionArr);
                 }
             }
              /**/
@@ -137,7 +128,8 @@ function getPokemonEvolution($evolutionUrl){
                 return $evolutionArr;
                // print_r($evolutionArr);
          }else{ // if pokemon has no evolution
-           echo "This pokemon has no evolution";
+            $msg = 2;
+            return $msg;
          }
 
 }
@@ -147,14 +139,19 @@ function getPokemonEvolution($evolutionUrl){
 /**
      * Add evolution display data of each pokemon to the array
      * At first call the array is empty 
-     * 
+     * collect only the data which we need to display of poekemon from api response and 
+     *create an associative array element of this data and push it to array
      */
-    function pushEvolutionData($jsonobj ,$arr){
-        if(!empty($jsonobj)){
-            $newdata =  array('name' => $jsonobj->name,'url' => $jsonobj->sprites->other->home->front_default, 'types'=>getTypes($jsonobj->types));
-            array_push($arr,$newdata);
+    function pushPokemonData($evolutionPokemonData,$evolutionArr){
+        if(!empty($evolutionPokemonData)){
+            
+            $newdata =  array('name' => $evolutionPokemonData->name,
+            'url' => $evolutionPokemonData->sprites->other->home->front_default, 
+            'types'=>getTypes($evolutionPokemonData->types));
+
+            array_push($evolutionArr,$newdata);
         }
-        return $arr;
+        return $evolutionArr;
     }
 
 ?>
@@ -173,6 +170,7 @@ function getPokemonEvolution($evolutionUrl){
     <div class="container-fluid">
         <header>
         <h2>Pokemon Data Finder</h2>
+        <h3 class="text-danger"><?= $falsePokename; ?></h3>
      </header>
         <div class="row">
             <section class="explain">
@@ -257,24 +255,24 @@ function getPokemonEvolution($evolutionUrl){
         </div>
         <!----><section class="evolutionSection">
             <div class="row" id="rowHeader">
-                <?php  if(!empty($pokemonEvolution)) { ?>
+                <?php  if(!empty($pokemonEvolution) && $pokemonEvolution != 2) { ?>
                     <h2>Evolutions</h2>
                 <?php
                     forEach($pokemonEvolution as $evoPokemon) {
-                       /* echo "evopokemon Name = ".$evoPokemon['name'];
-                        echo "evopokemon image url =  ".$evoPokemon['url'];
-                        echo "evopokemon types = ".$evoPokemon['types'];*/
                         echo "<div class=\"col-12 col-md-4 text-center\">";
                         echo "<img src=".$evoPokemon['url']." style=\"width: 200px; border-radius: 50%; border: 1px solid black;\"\>";
                         echo "<h4>".$evoPokemon['name']."</h4>";
                         echo "<h5>".$evoPokemon['types']."</h5>";
                         echo "</div>";
                     }
+               } else {
+                    echo "<h4 style=\"color:grey;\">This Pokemon has no Evolutions</h4>"; 
+                } 
                 ?>
-            <?php } ?>
             </div>
             <div class="row" id="showNoEvolutionPokeMsg">
-                
+            
+             
             </div>
         </section>
     </div>
